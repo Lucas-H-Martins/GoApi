@@ -9,17 +9,20 @@ import (
 
 func main() {
 	// Load configuration based on environment
-	_, err := config.LoadConfig()
+	cfg, err := config.LoadConfig()
+
 	if err != nil {
 		log.Fatalf("Failed to load configuration: %v", err)
 	}
 
-	// // Initialize database
-	// db := config.NewPostgresDB(&cfg.Database)
-	// if err := db.Connect(); err != nil {
-	// 	log.Fatalf("Failed to connect to database: %v", err)
-	// }
-	// defer db.Close()
+	// Initialize database
+	db := config.NewPostgresDB(&cfg.Database)
+
+	if err := db.Connect(); err != nil {
+		log.Fatalf("Failed to connect to database: %v", err)
+	}
+
+	defer db.Close()
 
 	// // Initialize router
 	// router := routes.NewRouter(db.GetDB())

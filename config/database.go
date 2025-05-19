@@ -3,6 +3,7 @@ package config
 import (
 	"database/sql"
 	"fmt"
+
 	_ "github.com/lib/pq"
 )
 
@@ -81,4 +82,4 @@ func (p *PostgresDB) Close() error {
 // GetDB returns the database instance
 func (p *PostgresDB) GetDB() *sql.DB {
 	return p.db
-} 
+}
