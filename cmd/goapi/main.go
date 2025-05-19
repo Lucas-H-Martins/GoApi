@@ -5,8 +5,15 @@ import (
 
 	"goapi/config"
 	"goapi/routes"
+
+	_ "goapi/docs" // This will be generated
 )
 
+// @title           Go API
+// @version         1.0
+// @description     A simple API written in Go
+// @host            localhost:8080
+// @BasePath        /
 func main() {
 	// Load configuration based on environment
 	cfg, err := config.LoadConfig()

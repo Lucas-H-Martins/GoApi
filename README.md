@@ -84,6 +84,26 @@ The server will start on the configured port (default: 8080 for local/dev, 80 fo
 - PUT `/users/{id}` - Update a user
 - DELETE `/users/{id}` - Delete a user
 
+## API Documentation
+
+The API documentation is available through Swagger UI. To access it:
+
+1. Start the server:
+```bash
+go run ./cmd/goapi/main.go
+```
+
+2. Open your browser and navigate to:
+```
+http://localhost:8080/swagger/index.html
+```
+
+The Swagger UI provides:
+- Interactive documentation of all API endpoints
+- Request/response schemas
+- Ability to test endpoints directly from the browser
+- Detailed parameter descriptions and requirements
+
 ## Authentication
 
 Protected endpoints require a Bearer token in the Authorization header:
@@ -149,3 +169,4 @@ Unauthorized Response:
     "error": "No authorization header provided"
 }
 ``` 
+

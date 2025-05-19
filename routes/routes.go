@@ -4,6 +4,8 @@ import (
 	"goapi/middleware"
 
 	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 // SetupRouter configures all the routes for the application
@@ -15,6 +17,9 @@ func SetupRouter() *gin.Engine {
 	router.Use(middleware.Logger())
 	// Use recovery middleware to handle panics
 	router.Use(gin.Recovery())
+
+	// Swagger documentation
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	// Hello World route
 	router.GET("/", func(c *gin.Context) {
