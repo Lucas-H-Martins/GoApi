@@ -15,12 +15,17 @@ type MigrationFile struct {
 }
 
 type Manager struct {
-	files []MigrationFile
-	db    *sql.DB
+	files                     []MigrationFile
+	db                        *sql.DB
+	defaultUpMigrationsPath   string
+	defaultDownMigrationsPath string
 }
 
 func NewManager(db *sql.DB) (*Manager, error) {
 	m := &Manager{db: db}
+
+	m.defaultUpMigrationsPath = "./migrations/up"
+	m.defaultDownMigrationsPath = "./migrations/down"
 
 	if err := m.createMigrationsTable(); err != nil {
 		return nil, err
@@ -33,24 +38,25 @@ func (m *Manager) createMigrationsTable() error {
 	query := `
 		CREATE TABLE IF NOT EXISTS migrations (
 			id SERIAL PRIMARY KEY,
-			name VARCHAR(255) NOT NULL UNIQUE,
-			executed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+			name VARCHAR(255) NOT NULL,
+			applied_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+			undone_at TIMESTAMP WITH TIME ZONE DEFAULT NULL
 		)
 	`
 	_, err := m.db.Exec(query)
 	return err
 }
 
-func (m *Manager) isMigrationExecuted(name string) (bool, error) {
+func (m *Manager) isMigrationUpExecuted(name string) (bool, error) {
 	var exists bool
-	err := m.db.QueryRow("SELECT EXISTS(SELECT 1 FROM migrations WHERE name = $1)", name).Scan(&exists)
+	err := m.db.QueryRow("SELECT EXISTS(SELECT 1 FROM migrations WHERE name = $1 and undone_at is null)", name).Scan(&exists)
 	return exists, err
 }
 
 func (m *Manager) RunMigrationsUp() error {
 	for _, file := range m.files {
 
-		file.PrintUpMigrations()
+		file.PrintMigrations("up")
 		// Start transaction
 		tx, err := m.db.Begin()
 		if err != nil {
@@ -83,16 +89,45 @@ func (m *Manager) RunMigrationsUp() error {
 }
 
 func (m *Manager) RunMigrationsDown() error {
-	// future implement
+	for _, file := range m.files {
+
+		file.PrintMigrations("Down")
+		// Start transaction
+		tx, err := m.db.Begin()
+		if err != nil {
+			return fmt.Errorf("error starting transaction: %w", err)
+		}
+
+		// Execute migration
+		_, err = tx.Exec(file.Content)
+		if err != nil {
+			tx.Rollback()
+			return fmt.Errorf("error executing migration %s: %w", file.Name, err)
+		}
+
+		// Record migration
+		_, err = tx.Exec("UPDATE migrations SET undone_at = NOW() WHERE name = $1 AND undone_at IS NULL", file.Name)
+
+		if err != nil {
+			tx.Rollback()
+			return fmt.Errorf("error recording migration %s: %w", file.Name, err)
+		}
+
+		// Commit transaction
+		if err = tx.Commit(); err != nil {
+			return fmt.Errorf("error committing migration %s: %w", file.Name, err)
+		}
+
+		logger.Info("Successfully executed migration: %s", file.Name)
+	}
+
 	return nil
 }
 
-func (m *Manager) LoadMigrations() error {
+func (m *Manager) LoadMigrationsUp(dir string) error {
 
-	// Load environment file from main folder
-	const defaultMigrationsPath = "./migrations/up"
 	// Read all files in the migrations directory
-	files, err := os.ReadDir(defaultMigrationsPath)
+	files, err := os.ReadDir(m.defaultUpMigrationsPath)
 
 	if err != nil {
 		return fmt.Errorf("failed to read migrations directory: %w", err)
@@ -107,7 +142,7 @@ func (m *Manager) LoadMigrations() error {
 			continue
 		}
 
-		executed, err := m.isMigrationExecuted(file.Name())
+		executed, err := m.isMigrationUpExecuted(file.Name())
 		if err != nil {
 			return fmt.Errorf("error checking migration status: %w", err)
 		}
@@ -117,13 +152,13 @@ func (m *Manager) LoadMigrations() error {
 		}
 
 		// Read file content
-		content, err := os.ReadFile(filepath.Join(defaultMigrationsPath, file.Name()))
+		content, err := os.ReadFile(filepath.Join(m.defaultUpMigrationsPath, file.Name()))
 		if err != nil {
 			return fmt.Errorf("failed to read file %s: %w", file.Name(), err)
 		}
 
 		migrationFile := MigrationFile{
-			Path:    filepath.Join(defaultMigrationsPath, file.Name()),
+			Path:    filepath.Join(m.defaultUpMigrationsPath, file.Name()),
 			Name:    file.Name(),
 			Content: string(content),
 		}
@@ -133,8 +168,57 @@ func (m *Manager) LoadMigrations() error {
 	return nil
 }
 
-func (file *MigrationFile) PrintUpMigrations() {
-	logger.Debug("=== Up Migration ===")
+func (m *Manager) LoadMigrationsDown(dir string) error {
+
+	// Read all files in the migrations directory
+	files, err := os.ReadDir(m.defaultDownMigrationsPath)
+
+	if err != nil {
+		return fmt.Errorf("failed to read migrations directory: %w", err)
+	}
+
+	// Process each file
+	for _, file := range files {
+		if file.IsDir() {
+			continue
+		}
+		if filepath.Ext(file.Name()) != ".sql" {
+			continue
+		}
+
+		exist, err := m.isMigrationUpExecuted(file.Name())
+
+		if err != nil {
+			return fmt.Errorf("error checking migration status: %w", err)
+		}
+		if !exist {
+			logger.Debug("Migration down %s already executed, skipping...", file.Name())
+			continue
+		}
+
+		// Read file content
+		content, err := os.ReadFile(filepath.Join(m.defaultDownMigrationsPath, file.Name()))
+		if err != nil {
+			return fmt.Errorf("failed to read file %s: %w", file.Name(), err)
+		}
+
+		migrationFile := MigrationFile{
+			Path:    filepath.Join(m.defaultDownMigrationsPath, file.Name()),
+			Name:    file.Name(),
+			Content: string(content),
+		}
+		m.files = append(m.files, migrationFile)
+	}
+
+	return nil
+}
+
+func (file *MigrationFile) PrintMigrations(dir string) {
+	if dir == "down" {
+		logger.Debug("=== Down Migration ===")
+	} else if dir == "up" {
+		logger.Debug("=== Up Migration ===")
+	}
 	logger.Debug("File: %s", file.Name)
 	logger.Debug("----------------------------------------")
 }

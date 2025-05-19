@@ -42,12 +42,11 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err := manager.LoadMigrations(); err != nil {
-		logger.Error("Failed to load migrations: %v", err)
-		os.Exit(1)
-	}
-
 	if *up {
+		if err := manager.LoadMigrationsUp("up"); err != nil {
+			logger.Error("Failed to load migrations: %v", err)
+			os.Exit(1)
+		}
 		if err := manager.RunMigrationsUp(); err != nil {
 			// Log the error and exit
 			logger.Error("Failed to run migrations up: %v", err)
@@ -56,6 +55,10 @@ func main() {
 	}
 
 	if *down {
+		if err := manager.LoadMigrationsDown("down"); err != nil {
+			logger.Error("Failed to load migrations: %v", err)
+			os.Exit(1)
+		}
 		if err := manager.RunMigrationsDown(); err != nil {
 			// Log the error and exit
 			logger.Error("Failed to run migrations down: %v", err)
