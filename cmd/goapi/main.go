@@ -4,7 +4,7 @@ import (
 	"log"
 
 	"goapi/config"
-	// "goapi/routes"
+	"goapi/routes"
 )
 
 func main() {
@@ -22,4 +22,12 @@ func main() {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
 
+	// Setup router
+	router := routes.SetupRouter()
+
+	// Start server
+	log.Printf("Server starting on port %s", cfg.Server.Port)
+	if err := router.Run(":" + cfg.Server.Port); err != nil {
+		log.Fatalf("Failed to start server: %v", err)
+	}
 }
