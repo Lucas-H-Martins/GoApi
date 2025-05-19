@@ -1,6 +1,56 @@
 # GoAPI
 
-A simple Go API using MVC pattern with authentication.
+A simple Go API using MVC pattern with authentication and PostgreSQL database.
+
+## Prerequisites
+
+- Go 1.21 or higher
+- PostgreSQL 12 or higher
+- Bash (for environment setup script)
+
+## Environment Setup
+
+The application supports three environments:
+- `local`: Local development
+- `dev`: Development server
+- `prod`: Production server
+
+To set up an environment:
+
+1. Run the setup script:
+```bash
+chmod +x scripts/setup_env.sh
+./scripts/setup_env.sh <environment>
+```
+
+For `dev` and `prod` environments, the script will prompt for database credentials and store them securely.
+
+### Environment Files
+
+Environment configurations are stored in `config/env.<environment>` files:
+- `config/env.local`: Local development settings
+- `config/env.dev`: Development server settings
+- `config/env.prod`: Production server settings
+
+### Secret Management
+
+Values prefixed with `!` in environment files are treated as paths to secret files. For example:
+```
+DB_PASSWORD=!secrets/dev/db_password
+```
+This will look for the password in the file `secrets/dev/db_password`.
+
+## Database Setup
+
+1. Create a PostgreSQL database:
+```bash
+createdb goapi_db
+```
+
+2. Run the migrations:
+```bash
+psql -d goapi_db -f migrations/001_create_users_table.sql
+```
 
 ## Getting Started
 
@@ -9,20 +59,30 @@ A simple Go API using MVC pattern with authentication.
 go mod tidy
 ```
 
-2. Run the application:
+2. Set up your environment:
+```bash
+./scripts/setup_env.sh local  # or dev/prod
+```
+
+3. Run the application:
 ```bash
 go run main.go
 ```
 
-The server will start on port 8080.
+The server will start on the configured port (default: 8080 for local/dev, 80 for prod).
 
 ## Available Endpoints
 
 ### Public Endpoints
 - GET `/hello` - Returns a hello world message (no authentication required)
 
-### Protected Endpoints
-- GET `/protected/hello` - Returns a hello world message (requires authentication)
+### Protected Endpoints (require authentication)
+#### Users
+- POST `/users` - Create a new user
+- GET `/users` - List all users
+- GET `/users/{id}` - Get a specific user
+- PUT `/users/{id}` - Update a user
+- DELETE `/users/{id}` - Delete a user
 
 ## Authentication
 
@@ -39,9 +99,28 @@ Public endpoint:
 curl http://localhost:8080/hello
 ```
 
-Protected endpoint:
+Protected endpoints:
 ```bash
-curl -H "Authorization: Bearer your-secret-token-123" http://localhost:8080/protected/hello
+# List users
+curl -H "Authorization: Bearer your-secret-token-123" http://localhost:8080/users
+
+# Create user
+curl -X POST -H "Authorization: Bearer your-secret-token-123" \
+     -H "Content-Type: application/json" \
+     -d '{"name":"John Doe","email":"john@example.com"}' \
+     http://localhost:8080/users
+
+# Get user by ID
+curl -H "Authorization: Bearer your-secret-token-123" http://localhost:8080/users/1
+
+# Update user
+curl -X PUT -H "Authorization: Bearer your-secret-token-123" \
+     -H "Content-Type: application/json" \
+     -d '{"name":"John Updated","email":"john.updated@example.com"}' \
+     http://localhost:8080/users/1
+
+# Delete user
+curl -X DELETE -H "Authorization: Bearer your-secret-token-123" http://localhost:8080/users/1
 ```
 
 ## Example Responses
@@ -50,6 +129,17 @@ Success Response:
 ```json
 {
     "message": "Hello, World!"
+}
+```
+
+User Response:
+```json
+{
+    "id": 1,
+    "name": "John Doe",
+    "email": "john@example.com",
+    "created_at": "2024-03-21T10:00:00Z",
+    "updated_at": "2024-03-21T10:00:00Z"
 }
 ```
 
