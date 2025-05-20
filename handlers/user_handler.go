@@ -97,6 +97,7 @@ func (h *UserHandler) GetUserByID(c *gin.Context) {
 // @Param offset query int false "Offset"
 // @Param name query string false "Name filter"
 // @Param email query string false "Email filter"
+// @Param order query string false "Sort order (ASC or DESC)"
 // @Success 200 {object} models.UserList
 // @Failure 400 {object} models.ErrorResponse
 // @Failure 500 {object} models.ErrorResponse
@@ -121,6 +122,7 @@ func (h *UserHandler) ListUsers(c *gin.Context) {
 
 	params.Name = c.Query("name")
 	params.Email = c.Query("email")
+	params.Order = users_sql.SortOrder(c.Query("order"))
 
 	users, err := h.userService.ListUsers(c.Request.Context(), params)
 	if err != nil {

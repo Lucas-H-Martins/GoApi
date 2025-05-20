@@ -11,7 +11,7 @@ import (
 type UserRepository interface {
 	Create(user *models.UserInput) (*models.UserOutput, error)
 	GetByID(id int) (*models.UserOutput, error)
-	List() ([]*models.UserOutput, error)
+	List(params ListParams) ([]*models.UserOutput, int64, error)
 	Update(user *models.UserOutput) error
 	Delete(id int) error
 }
@@ -41,11 +41,10 @@ func (r *PostgresUserRepository) Create(user *models.UserInput) (*models.UserOut
 // GetByID implements the GetByID method of UserRepository
 func (r *PostgresUserRepository) GetByID(id int) (*models.UserOutput, error) {
 	user := &models.UserOutput{}
-	query := `SELECT id, name, email FROM users WHERE id = $1`
-
+	query := users_sql.GetByIDSQL
 	logger.Debug("Executing query: %s with id: %d", query, id)
 
-	err := r.db.QueryRow(query, id).Scan(&user.ID, &user.Name, &user.Email)
+	err := r.db.QueryRow(query, id).Scan(&user.ID, &user.Name, &user.Email, &user.CreatedAt, &user.UpdatedAt)
 	if err != nil {
 		logger.Error("Error retrieving user with id %d: %v", id, err)
 		return nil, err
@@ -54,36 +53,59 @@ func (r *PostgresUserRepository) GetByID(id int) (*models.UserOutput, error) {
 	return user, nil
 }
 
+// ListParams represents the parameters for listing users
+type ListParams struct {
+	Limit   int
+	Offset  int
+	Name    string
+	Email   string
+	OrderBy string
+}
+
 // List implements the List method of UserRepository
-func (r *PostgresUserRepository) List() ([]*models.UserOutput, error) {
-	query := `SELECT id, name, email FROM users`
-	rows, err := r.db.Query(query)
+func (r *PostgresUserRepository) List(params ListParams) ([]*models.UserOutput, int64, error) {
+	query := users_sql.GetListSQL(params.OrderBy)
+	rows, err := r.db.Query(query, params.Limit, params.Offset, params.Name, params.Email)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 	defer rows.Close()
 
 	var users []*models.UserOutput
+	var totalCount int64
+
 	for rows.Next() {
 		user := &models.UserOutput{}
-		if err := rows.Scan(&user.ID, &user.Name, &user.Email); err != nil {
-			return nil, err
+		if err := rows.Scan(
+			&user.ID,
+			&user.Name,
+			&user.Email,
+			&user.CreatedAt,
+			&user.UpdatedAt,
+			&totalCount,
+		); err != nil {
+			return nil, 0, err
 		}
 		users = append(users, user)
 	}
-	return users, nil
+
+	if err = rows.Err(); err != nil {
+		return nil, 0, err
+	}
+
+	return users, totalCount, nil
 }
 
 // Update implements the Update method of UserRepository
 func (r *PostgresUserRepository) Update(user *models.UserOutput) error {
-	query := `UPDATE users SET name = $1, email = $2 WHERE id = $3`
+	query := users_sql.UpdateSQL
 	_, err := r.db.Exec(query, user.Name, user.Email, user.ID)
 	return err
 }
 
 // Delete implements the Delete method of UserRepository
 func (r *PostgresUserRepository) Delete(id int) error {
-	query := `DELETE FROM users WHERE id = $1`
+	query := users_sql.DeleteSQL
 	_, err := r.db.Exec(query, id)
 	return err
 }

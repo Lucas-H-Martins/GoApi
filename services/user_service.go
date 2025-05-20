@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 
 	"goapi/models"
@@ -52,7 +53,18 @@ func (s *userService) CreateUser(ctx context.Context, user *models.UserInput) (*
 
 // GetUserByID retrieves a user by their ID
 func (s *userService) GetUserByID(ctx context.Context, id int64) (*models.UserOutput, error) {
-	return s.repo.GetByID(int(id))
+	// get user in repository
+	createdUser, err := s.repo.GetByID(int(id))
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, models.ErrNotFound
+		}
+		return nil, err
+	}
+
+	// Return the created user's data
+	return createdUser, nil
+
 }
 
 // UpdateUser updates an existing user
@@ -81,37 +93,29 @@ func (s *userService) ListUsers(ctx context.Context, params users_sql.SearchPara
 		return nil, err
 	}
 
-	// Get users from repository
-	users, err := s.repo.List()
+	// Convert search params to repository params
+	repoParams := repository.ListParams{
+		Limit:   params.Limit,
+		Offset:  params.Offset,
+		Name:    params.Name,
+		Email:   params.Email,
+		OrderBy: params.GetOrderBy(),
+	}
+
+	// Get users from repository with pagination and filtering
+	users, totalCount, err := s.repo.List(repoParams)
 	if err != nil {
 		return nil, err
 	}
 
-	// Apply filtering
-	var filteredUsers []models.UserOutput
-	for _, user := range users {
-		if params.Name != "" && user.Name != params.Name {
-			continue
-		}
-		if params.Email != "" && user.Email != params.Email {
-			continue
-		}
-		filteredUsers = append(filteredUsers, *user)
-	}
-
-	// Apply pagination
-	totalCount := int64(len(filteredUsers))
-	start := params.Offset
-	end := start + params.Limit
-	if end > len(filteredUsers) {
-		end = len(filteredUsers)
-	}
-	if start > len(filteredUsers) {
-		start = len(filteredUsers)
+	// Convert []*models.UserOutput to []models.UserOutput
+	userOutputs := make([]models.UserOutput, len(users))
+	for i, user := range users {
+		userOutputs[i] = *user
 	}
 
 	return &models.UserList{
-		Users:      filteredUsers[start:end],
+		Users:      userOutputs,
 		TotalCount: totalCount,
 		Limit:      params.Limit,
 		Offset:     params.Offset,

@@ -49,11 +49,13 @@ func (p *SearchParams) GetOrderBy() string {
 		p.Order = ASC
 	}
 
+	// Default to ordering by id if no specific field is being searched
+	orderField := "id"
 	if p.Name != "" {
-		return fmt.Sprintf("name %s", p.Order)
+		orderField = "name"
+	} else if p.Email != "" {
+		orderField = "email"
 	}
-	if p.Email != "" {
-		return fmt.Sprintf("email %s", p.Order)
-	}
-	return fmt.Sprintf("id %s", p.Order)
-} 
+
+	return fmt.Sprintf("%s %s", orderField, p.Order)
+}

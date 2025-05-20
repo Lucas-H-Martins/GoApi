@@ -23,11 +23,11 @@ WITH filtered_users AS (
     FROM users
     WHERE
         deleted_at IS NULL
-        AND CASE 
-            WHEN $3 != '' THEN name ILIKE '%' || $3 || '%'
-            WHEN $4 != '' THEN email ILIKE '%' || $4 || '%'
-            ELSE true
-        END
+        AND (
+            ($3 IS NULL OR $3 = '') AND ($4 IS NULL OR $4 = '')
+            OR ($3 IS NOT NULL AND $3 != '' AND name ILIKE '%' || $3 || '%')
+            OR ($4 IS NOT NULL AND $4 != '' AND email ILIKE '%' || $4 || '%')
+        )
 )
 SELECT
     id,
