@@ -29,8 +29,8 @@ func NewUserHandler(userService services.UserService) *UserHandler {
 // @Tags users
 // @Accept json
 // @Produce json
-// @Param user body models.User true "User object"
-// @Success 201 {object} models.User
+// @Param user body models.UserInput true "User object"
+// @Success 201 {object} models.UserOutput
 // @Failure 400 {object} map[string]string
 // @Failure 500 {object} map[string]string
 // @Router /users [post]
@@ -57,7 +57,7 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 // @Tags users
 // @Produce json
 // @Param id path int true "User ID"
-// @Success 200 {object} models.User
+// @Success 200 {object} models.UserInput
 // @Failure 404 {object} map[string]string
 // @Failure 500 {object} map[string]string
 // @Router /users/{id} [get]
@@ -130,8 +130,8 @@ func (h *UserHandler) ListUsers(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path int true "User ID"
-// @Param user body models.User true "User object"
-// @Success 200 {object} models.User
+// @Param user body models.UserInput true "User object"
+// @Success 200 {object} models.UserOutput
 // @Failure 400 {object} map[string]string
 // @Failure 404 {object} map[string]string
 // @Failure 500 {object} map[string]string
