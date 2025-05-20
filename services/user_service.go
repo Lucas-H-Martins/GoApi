@@ -31,14 +31,6 @@ func NewUserService(repo repository.UserRepository) UserService {
 
 // CreateUser creates a new user
 func (s *userService) CreateUser(ctx context.Context, user *models.UserInput) (*models.UserOutput, error) {
-	// // Validate user data
-	// if user.Name == "" {
-	// 	return nil, models.ErrInvalidName
-	// }
-	// if user.Email == "" {
-	// 	return nil, models.ErrInvalidEmail
-	// }
-
 	// Create user in repository
 	createdUser, err := s.repo.Create(user)
 	if err != nil {

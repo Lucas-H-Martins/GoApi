@@ -32,6 +32,7 @@ var (
 	ErrInvalidEmail = &AppError{Code: http.StatusBadRequest, Message: "invalid email"}
 	ErrNotFound     = &AppError{Code: http.StatusNotFound, Message: "resource not found"}
 	ErrInternal     = &AppError{Code: http.StatusInternalServerError, Message: "internal server error"}
+	ErrDuplicate    = &AppError{Code: http.StatusConflict, Message: "duplicate resource"}
 )
 
 // NewAppError creates a new application error
