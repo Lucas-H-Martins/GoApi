@@ -32,6 +32,8 @@ func SetupRouter(db *sql.DB) *gin.Engine {
 
 	// Use our custom logger middleware
 	router.Use(middleware.Logger())
+	// Use our custom authorization middleware
+	router.Use(gin.HandlerFunc(middleware.AuthMiddleware()))
 	// Use recovery middleware to handle panics
 	router.Use(gin.Recovery())
 
