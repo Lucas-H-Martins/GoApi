@@ -6,3 +6,7 @@ run-migrate-dev-up:
 
 run-migrate-dev-down:
 	GO_ENV=dev go run ./cmd/migrate/main.go -down
+
+run-docs:
+	swag init -g ./cmd/goapi/main.go -o ./docs
+	

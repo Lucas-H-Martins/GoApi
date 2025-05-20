@@ -5,5 +5,20 @@ info:
   description: A simple API written in Go
   title: Go API
   version: "1.0"
-paths: {}
+paths:
+  /:
+    get:
+      description: Returns a simple hello world message
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Returns a hello world message
+      tags:
+      - hello
 swagger: "2.0"

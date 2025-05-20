@@ -8,6 +8,19 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
+// HelloWorldHandler godoc
+// @Summary Returns a hello world message
+// @Description Returns a simple hello world message
+// @Tags hello
+// @Produce json
+// @Success 200 {object} map[string]string
+// @Router / [get]
+func HelloWorldHandler(c *gin.Context) {
+	c.JSON(200, gin.H{
+		"message": "Hello World!",
+	})
+}
+
 // SetupRouter configures all the routes for the application
 func SetupRouter() *gin.Engine {
 	// Create a new gin router without default middleware
@@ -21,12 +34,7 @@ func SetupRouter() *gin.Engine {
 	// Swagger documentation
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
-	// Hello World route
-	router.GET("/", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "Hello World!",
-		})
-	})
+	router.GET("/", HelloWorldHandler)
 
 	// router.GET("/users", userHandler.GetUsers)
 	// router.GET("/users/:id", userHandler.GetUserByID)
