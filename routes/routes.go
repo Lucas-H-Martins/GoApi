@@ -1,7 +1,11 @@
 package routes
 
 import (
+	"database/sql"
+	"goapi/handlers"
 	"goapi/middleware"
+	"goapi/repository"
+	"goapi/services"
 
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
@@ -22,7 +26,7 @@ func HelloWorldHandler(c *gin.Context) {
 }
 
 // SetupRouter configures all the routes for the application
-func SetupRouter() *gin.Engine {
+func SetupRouter(db *sql.DB) *gin.Engine {
 	// Create a new gin router without default middleware
 	router := gin.New()
 
@@ -31,13 +35,26 @@ func SetupRouter() *gin.Engine {
 	// Use recovery middleware to handle panics
 	router.Use(gin.Recovery())
 
+	// Initialize repositories
+	userRepo := repository.NewPostgresUserRepository(db)
+
+	// Initialize services
+	userService := services.NewUserService(userRepo)
+
+	// Initialize handlers
+	userHandler := handlers.NewUserHandler(userService)
+
 	// Swagger documentation
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	router.GET("/", HelloWorldHandler)
 
-	// router.GET("/users", userHandler.GetUsers)
-	// router.GET("/users/:id", userHandler.GetUserByID)
+	// User routes
+	router.POST("/users", userHandler.CreateUser)
+	router.GET("/users", userHandler.ListUsers)
+	router.GET("/users/:id", userHandler.GetUserByID)
+	router.PUT("/users/:id", userHandler.UpdateUser)
+	router.DELETE("/users/:id", userHandler.DeleteUser)
 
 	return router
 }

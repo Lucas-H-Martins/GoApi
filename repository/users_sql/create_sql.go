@@ -1,12 +1,10 @@
 package users_sql
 
-const CreateSQL = `
+const CreateUserSQL = `
 -- name: CreateUser
 -- Params:
 --   $1: name (string)
 --   $2: email (string)
---   $3: created_at (timestamp)
---   Note: created_at is also used for updated_at initially
 INSERT INTO users (
     name,
     email,
@@ -16,7 +14,13 @@ INSERT INTO users (
 VALUES (
     $1,
     $2,
-    $3,
-    $3
+    now(),
+    now()
 )
-RETURNING id` 
+RETURNING 
+    id,
+    name,
+    email,
+    created_at,
+    updated_at
+    `

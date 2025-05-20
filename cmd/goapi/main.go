@@ -30,7 +30,7 @@ func main() {
 	}
 
 	// Setup router
-	router := routes.SetupRouter()
+	router := routes.SetupRouter(db.GetDB())
 
 	// Start server
 	log.Printf("Server starting on port %s", cfg.Server.Port)
