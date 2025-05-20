@@ -1,172 +1,183 @@
-# GoAPI
+# Go API Study Project
 
-A simple Go API using MVC pattern with authentication and PostgreSQL database.
+This repository contains a RESTful API built with Go, designed as a study project to demonstrate various concepts and best practices in Go development.
 
-## Prerequisites
+## Project Structure
 
-- Go 1.21 or higher
-- PostgreSQL 12 or higher
-- Bash (for environment setup script)
+```
+.
+├── cmd/                    # Application entry points
+│   ├── goapi/             # Main API server
+│   │   └── main.go        # API server entrypoint
+│   └── migrate/           # Database migration system
+│       └── main.go        # Migration system entrypoint
+├── config/                # Configuration management
+│   └── database.go        # Database configuration
+├── docs/                  # API documentation
+│   ├── docs.go           # Swagger documentation
+│   ├── swagger.json      # Swagger JSON specification
+│   └── swagger.yaml      # Swagger YAML specification
+├── handlers/             # HTTP request handlers
+│   └── user_handler.go   # User-related request handlers
+├── logger/               # Logging utilities
+│   └── logger.go         # Custom logger implementation
+├── middleware/           # HTTP middleware components
+│   ├── auth.go          # Authentication middleware
+│   └── logger.go        # Request logging middleware
+├── migrations/           # Database migrations
+│   ├── manager.go       # Migration system core logic
+│   ├── down/            # Rollback migrations
+│   └── up/              # Forward migrations
+├── models/              # Data models
+│   └── user.go          # User model definitions
+├── repository/          # Data access layer
+│   ├── user_repository.go    # User repository interface
+│   └── users_sql/           # SQL queries for users
+├── routes/              # Route definitions
+│   ├── routes.go        # Main router setup
+│   └── user_routes/     # User-specific routes
+├── services/            # Business logic layer
+│   └── user_service.go  # User-related business logic
+├── env.*               # Environment configuration files
+├── .gitignore         # Git ignore file
+├── Dockerfile         # Docker configuration
+├── docker-compose.yml # Docker Compose configuration
+├── go.mod             # Go module file
+├── go.sum             # Go module checksum
+└── Makefile           # Build and development commands
+```
 
-## Environment Setup
+## Features
 
-The application supports three environments:
-- `local`: Local development
-- `dev`: Development server
-- `prod`: Production server
+### RESTful API Design
+- Follows REST principles for resource management
+- Standard HTTP methods (GET, POST, PUT, DELETE)
+- Consistent response patterns
+- Proper status codes and error handling
 
-To set up an environment:
+### Middleware Implementation
+1. **Authentication Middleware**
+   - Currently uses a fixed API key for demonstration
+   - Designed to be easily extensible for various auth systems:
+     - Auth0
+     - Keycloak
+     - Azure AD
+     - Custom AD systems
+     - JWT-based authentication
 
-1. Run the setup script:
+2. **Logger Middleware**
+   - Comprehensive request/response logging
+   - Includes:
+     - Request method and path
+     - Response status
+     - Processing time
+     - Request headers
+     - Request body (when applicable)
+     - Error details
+
+### Database Layer
+- PostgreSQL database
+- Repository pattern implementation
+- SQL query management
+- Migration system with:
+  - Forward and rollback migrations
+  - Transaction support
+  - Migration tracking
+  - Safe execution (prevents duplicates)
+
+### API Documentation
+- Swagger/OpenAPI documentation
+- Interactive API testing interface
+- Available at `/swagger/*`
+
+## Makefile Commands
+
+The project includes a Makefile with the following commands:
+
 ```bash
-chmod +x scripts/setup_env.sh
-./scripts/setup_env.sh <environment>
-```
+# Build the application
+make build
 
-For `dev` and `prod` environments, the script will prompt for database credentials and store them securely.
+# Run the application
+make run
 
-### Environment Files
+# Run tests
+make test
 
-Environment configurations are stored in `config/env.<environment>` files:
-- `config/env.local`: Local development settings
-- `config/env.dev`: Development server settings
-- `config/env.prod`: Production server settings
+# Run linter
+make lint
 
-### Secret Management
+# Run database migrations
+make migrate-up    # Apply migrations
+make migrate-down  # Rollback migrations
 
-Values prefixed with `!` in environment files are treated as paths to secret files. For example:
-```
-DB_PASSWORD=!secrets/dev/db_password
-```
-This will look for the password in the file `secrets/dev/db_password`.
+# Generate Swagger documentation
+make swagger
 
-## Database Setup
-
-1. Create a PostgreSQL database:
-```bash
-createdb goapi_db
-```
-
-2. Run the migrations:
-```bash
-psql -d goapi_db -f migrations/001_create_users_table.sql
+# Clean build artifacts
+make clean
 ```
 
 ## Getting Started
 
-1. Install dependencies:
-```bash
-go mod tidy
+1. Clone the repository
+2. Set up environment variables:
+   - Copy `env.local` to `.env`
+   - Adjust values as needed
+3. Install dependencies:
+   ```bash
+   go mod download
+   ```
+4. Run database migrations:
+   ```bash
+   make migrate-up
+   ```
+5. Start the application:
+   ```bash
+   make run
+   ```
+
+## API Endpoints
+
+### Users
+- `GET /users` - List users (with pagination and filtering)
+- `POST /users` - Create a new user
+- `GET /users/{id}` - Get user by ID
+- `PUT /users/{id}` - Update user
+- `DELETE /users/{id}` - Delete user
+
+## Development
+
+### Prerequisites
+- Go 1.21 or higher
+- PostgreSQL
+- Make
+
+### Environment Variables
+The project uses environment-specific configuration files:
+- `env.local` - Local development
+- `env.dev` - Development environment
+- `env.prod` - Production environment
+
+Required variables:
+```
+DB_HOST=localhost
+DB_PORT=5432
+DB_USER=postgres
+DB_PASSWORD=postgres
+DB_NAME=goapi_db
+DB_SSL_MODE=disable
 ```
 
-2. Set up your environment:
-```bash
-./scripts/setup_env.sh local  # or dev/prod
-```
+## Contributing
 
-3. Run the application:
-```bash
-go run main.go
-```
+1. Fork the repository
+2. Create your feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a Pull Request
 
-The server will start on the configured port (default: 8080 for local/dev, 80 for prod).
+## License
 
-## Available Endpoints
-
-### Public Endpoints
-- GET `/hello` - Returns a hello world message (no authentication required)
-
-### Protected Endpoints (require authentication)
-#### Users
-- POST `/users` - Create a new user
-- GET `/users` - List all users
-- GET `/users/{id}` - Get a specific user
-- PUT `/users/{id}` - Update a user
-- DELETE `/users/{id}` - Delete a user
-
-## API Documentation
-
-The API documentation is available through Swagger UI. To access it:
-
-1. Start the server:
-```bash
-go run ./cmd/goapi/main.go
-```
-
-2. Open your browser and navigate to:
-```
-http://localhost:8080/swagger/index.html
-```
-
-The Swagger UI provides:
-- Interactive documentation of all API endpoints
-- Request/response schemas
-- Ability to test endpoints directly from the browser
-- Detailed parameter descriptions and requirements
-
-## Authentication
-
-Protected endpoints require a Bearer token in the Authorization header:
-
-```
-Authorization: Bearer your-secret-token-123
-```
-
-### Example cURL Requests
-
-Public endpoint:
-```bash
-curl http://localhost:8080/hello
-```
-
-Protected endpoints:
-```bash
-# List users
-curl -H "Authorization: Bearer your-secret-token-123" http://localhost:8080/users
-
-# Create user
-curl -X POST -H "Authorization: Bearer your-secret-token-123" \
-     -H "Content-Type: application/json" \
-     -d '{"name":"John Doe","email":"john@example.com"}' \
-     http://localhost:8080/users
-
-# Get user by ID
-curl -H "Authorization: Bearer your-secret-token-123" http://localhost:8080/users/1
-
-# Update user
-curl -X PUT -H "Authorization: Bearer your-secret-token-123" \
-     -H "Content-Type: application/json" \
-     -d '{"name":"John Updated","email":"john.updated@example.com"}' \
-     http://localhost:8080/users/1
-
-# Delete user
-curl -X DELETE -H "Authorization: Bearer your-secret-token-123" http://localhost:8080/users/1
-```
-
-## Example Responses
-
-Success Response:
-```json
-{
-    "message": "Hello, World!"
-}
-```
-
-User Response:
-```json
-{
-    "id": 1,
-    "name": "John Doe",
-    "email": "john@example.com",
-    "created_at": "2024-03-21T10:00:00Z",
-    "updated_at": "2024-03-21T10:00:00Z"
-}
-```
-
-Unauthorized Response:
-```json
-{
-    "error": "No authorization header provided"
-}
-``` 
+This project is licensed under the MIT License - see the LICENSE file for details. 
 
