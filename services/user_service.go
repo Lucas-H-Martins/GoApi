@@ -2,7 +2,6 @@ package services
 
 import (
 	"context"
-	"time"
 
 	"goapi/models"
 	"goapi/repository"
@@ -11,9 +10,9 @@ import (
 
 // UserService defines the interface for user-related business operations
 type UserService interface {
-	CreateUser(ctx context.Context, user *models.User) (*models.User, error)
-	GetUserByID(ctx context.Context, id int64) (*models.User, error)
-	UpdateUser(ctx context.Context, user *models.User) error
+	CreateUser(ctx context.Context, user *models.UserInput) (*models.UserOutput, error)
+	GetUserByID(ctx context.Context, id int64) (*models.UserOutput, error)
+	UpdateUser(ctx context.Context, user *models.UserOutput) error
 	DeleteUser(ctx context.Context, id int64) error
 	ListUsers(ctx context.Context, params users_sql.SearchParams) (*models.UserList, error)
 }
@@ -31,7 +30,7 @@ func NewUserService(repo repository.UserRepository) UserService {
 }
 
 // CreateUser creates a new user
-func (s *userService) CreateUser(ctx context.Context, user *models.User) (*models.User, error) {
+func (s *userService) CreateUser(ctx context.Context, user *models.UserInput) (*models.UserOutput, error) {
 	// // Validate user data
 	// if user.Name == "" {
 	// 	return nil, models.ErrInvalidName
@@ -46,18 +45,17 @@ func (s *userService) CreateUser(ctx context.Context, user *models.User) (*model
 		return nil, err
 	}
 
-	// Update the input user with the created user's data
-	*user = *createdUser
-	return user, nil
+	// Return the created user's data
+	return createdUser, nil
 }
 
 // GetUserByID retrieves a user by their ID
-func (s *userService) GetUserByID(ctx context.Context, id int64) (*models.User, error) {
+func (s *userService) GetUserByID(ctx context.Context, id int64) (*models.UserOutput, error) {
 	return s.repo.GetByID(int(id))
 }
 
 // UpdateUser updates an existing user
-func (s *userService) UpdateUser(ctx context.Context, user *models.User) error {
+func (s *userService) UpdateUser(ctx context.Context, user *models.UserOutput) error {
 	// Validate user data
 	if user.Name == "" {
 		return models.ErrInvalidName
@@ -65,9 +63,6 @@ func (s *userService) UpdateUser(ctx context.Context, user *models.User) error {
 	if user.Email == "" {
 		return models.ErrInvalidEmail
 	}
-
-	// Update timestamp
-	user.UpdatedAt = time.Now()
 
 	// Update user in repository
 	return s.repo.Update(user)
@@ -92,7 +87,7 @@ func (s *userService) ListUsers(ctx context.Context, params users_sql.SearchPara
 	}
 
 	// Apply filtering
-	var filteredUsers []models.User
+	var filteredUsers []models.UserOutput
 	for _, user := range users {
 		if params.Name != "" && user.Name != params.Name {
 			continue

@@ -1,18 +1,21 @@
 package models
 
-import "time"
+type UserInput struct {
+	Name  string `json:"name" binding:"required,min=3"`
+	Email string `json:"email" binding:"required,email"`
+}
 
-type User struct {
-	ID        *int64    `json:"id"`
-	Name      string    `json:"name"`
-	Email     string    `json:"email"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+type UserOutput struct {
+	ID        *int64 `json:"id"`
+	Name      string `json:"name"`
+	Email     string `json:"email"`
+	CreatedAt string `json:"created_at"`
+	UpdatedAt string `json:"updated_at"`
 }
 
 type UserList struct {
-	Users      []User `json:"users"`
-	TotalCount int64  `json:"total_count"`
-	Limit      int    `json:"limit"`
-	Offset     int    `json:"offset"`
+	Users      []UserOutput `json:"users"`
+	TotalCount int64        `json:"total_count"`
+	Limit      int          `json:"limit"`
+	Offset     int          `json:"offset"`
 }

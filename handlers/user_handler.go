@@ -35,7 +35,8 @@ func NewUserHandler(userService services.UserService) *UserHandler {
 // @Failure 500 {object} map[string]string
 // @Router /users [post]
 func (h *UserHandler) CreateUser(c *gin.Context) {
-	var user models.User
+	var user models.UserInput
+
 	if err := c.ShouldBindJSON(&user); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -142,7 +143,7 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 		return
 	}
 
-	var user models.User
+	var user models.UserOutput
 	if err := c.ShouldBindJSON(&user); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
