@@ -32,10 +32,14 @@ func SetupRouter(db *sql.DB) *gin.Engine {
 
 	// Use our custom logger middleware
 	router.Use(middleware.Logger())
-	// Use our custom authorization middleware
-	router.Use(gin.HandlerFunc(middleware.AuthMiddleware()))
 	// Use recovery middleware to handle panics
 	router.Use(gin.Recovery())
+
+	// Swagger documentation - placed before auth middleware to be publicly accessible
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+
+	// Use our custom authorization middleware
+	router.Use(gin.HandlerFunc(middleware.AuthMiddleware()))
 
 	// Initialize repositories
 	userRepo := repository.NewPostgresUserRepository(db)
@@ -45,9 +49,6 @@ func SetupRouter(db *sql.DB) *gin.Engine {
 
 	// Initialize handlers
 	userHandler := handlers.NewUserHandler(userService)
-
-	// Swagger documentation
-	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	router.GET("/", HelloWorldHandler)
 
