@@ -31,20 +31,21 @@ func NewUserHandler(userService services.UserService) *UserHandler {
 // @Produce json
 // @Param user body models.UserInput true "User object"
 // @Success 201 {object} models.UserOutput
-// @Failure 400 {object} map[string]string
-// @Failure 500 {object} map[string]string
+// @Failure 400 {object} models.ErrorResponse
+// @Failure 500 {object} models.ErrorResponse
 // @Router /users [post]
 func (h *UserHandler) CreateUser(c *gin.Context) {
 	var user models.UserInput
-
 	if err := c.ShouldBindJSON(&user); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		errorResp := models.ToErrorResponse(models.NewAppError(http.StatusBadRequest, "invalid request body", err))
+		c.JSON(errorResp.Code, errorResp)
 		return
 	}
 
 	createdUser, err := h.userService.CreateUser(c.Request.Context(), &user)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		errorResp := models.ToErrorResponse(err)
+		c.JSON(errorResp.Code, errorResp)
 		return
 	}
 
@@ -57,24 +58,28 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 // @Tags users
 // @Produce json
 // @Param id path int true "User ID"
-// @Success 200 {object} models.UserInput
-// @Failure 404 {object} map[string]string
-// @Failure 500 {object} map[string]string
+// @Success 200 {object} models.UserOutput
+// @Failure 400 {object} models.ErrorResponse
+// @Failure 404 {object} models.ErrorResponse
+// @Failure 500 {object} models.ErrorResponse
 // @Router /users/{id} [get]
 func (h *UserHandler) GetUserByID(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user ID"})
+		errorResp := models.ToErrorResponse(models.NewAppError(http.StatusBadRequest, "invalid user ID", err))
+		c.JSON(errorResp.Code, errorResp)
 		return
 	}
 
 	user, err := h.userService.GetUserByID(c.Request.Context(), id)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		errorResp := models.ToErrorResponse(err)
+		c.JSON(errorResp.Code, errorResp)
 		return
 	}
 	if user == nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
+		errorResp := models.ToErrorResponse(models.ErrNotFound)
+		c.JSON(errorResp.Code, errorResp)
 		return
 	}
 
@@ -91,8 +96,8 @@ func (h *UserHandler) GetUserByID(c *gin.Context) {
 // @Param name query string false "Name filter"
 // @Param email query string false "Email filter"
 // @Success 200 {object} models.UserList
-// @Failure 400 {object} map[string]string
-// @Failure 500 {object} map[string]string
+// @Failure 400 {object} models.ErrorResponse
+// @Failure 500 {object} models.ErrorResponse
 // @Router /users [get]
 func (h *UserHandler) ListUsers(c *gin.Context) {
 	params := users_sql.SearchParams{
@@ -116,7 +121,8 @@ func (h *UserHandler) ListUsers(c *gin.Context) {
 
 	users, err := h.userService.ListUsers(c.Request.Context(), params)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		errorResp := models.ToErrorResponse(err)
+		c.JSON(errorResp.Code, errorResp)
 		return
 	}
 
@@ -130,28 +136,31 @@ func (h *UserHandler) ListUsers(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path int true "User ID"
-// @Param user body models.UserInput true "User object"
+// @Param user body models.UserOutput true "User object"
 // @Success 200 {object} models.UserOutput
-// @Failure 400 {object} map[string]string
-// @Failure 404 {object} map[string]string
-// @Failure 500 {object} map[string]string
+// @Failure 400 {object} models.ErrorResponse
+// @Failure 404 {object} models.ErrorResponse
+// @Failure 500 {object} models.ErrorResponse
 // @Router /users/{id} [put]
 func (h *UserHandler) UpdateUser(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user ID"})
+		errorResp := models.ToErrorResponse(models.NewAppError(http.StatusBadRequest, "invalid user ID", err))
+		c.JSON(errorResp.Code, errorResp)
 		return
 	}
 
 	var user models.UserOutput
 	if err := c.ShouldBindJSON(&user); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		errorResp := models.ToErrorResponse(models.NewAppError(http.StatusBadRequest, "invalid request body", err))
+		c.JSON(errorResp.Code, errorResp)
 		return
 	}
 
 	user.ID = &id
 	if err := h.userService.UpdateUser(c.Request.Context(), &user); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		errorResp := models.ToErrorResponse(err)
+		c.JSON(errorResp.Code, errorResp)
 		return
 	}
 
@@ -165,19 +174,21 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 // @Produce json
 // @Param id path int true "User ID"
 // @Success 204 "No Content"
-// @Failure 400 {object} map[string]string
-// @Failure 404 {object} map[string]string
-// @Failure 500 {object} map[string]string
+// @Failure 400 {object} models.ErrorResponse
+// @Failure 404 {object} models.ErrorResponse
+// @Failure 500 {object} models.ErrorResponse
 // @Router /users/{id} [delete]
 func (h *UserHandler) DeleteUser(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user ID"})
+		errorResp := models.ToErrorResponse(models.NewAppError(http.StatusBadRequest, "invalid user ID", err))
+		c.JSON(errorResp.Code, errorResp)
 		return
 	}
 
 	if err := h.userService.DeleteUser(c.Request.Context(), id); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		errorResp := models.ToErrorResponse(err)
+		c.JSON(errorResp.Code, errorResp)
 		return
 	}
 
