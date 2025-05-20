@@ -9,4 +9,5 @@ run-migrate-dev-down:
 
 run-docs:
 	export GOPATH=$HOME/go && export PATH=$PATH:$GOPATH/bin && swag init -g ./cmd/goapi/main.go -o ./docs
-	
+swagger:
+	swag init -g ./cmd/goapi/main.go -o ./docs

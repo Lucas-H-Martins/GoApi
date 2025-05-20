@@ -14,6 +14,10 @@ import (
 // @description     A simple API written in Go
 // @host            localhost:8080
 // @BasePath        /
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+// @description Type "Bearer" followed by a space and JWT token.
 func main() {
 	// Load configuration based on environment
 	cfg, err := config.LoadConfig()

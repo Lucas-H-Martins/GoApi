@@ -33,6 +33,7 @@ func NewUserHandler(userService services.UserService) *UserHandler {
 // @Success 201 {object} models.UserOutput
 // @Failure 400 {object} models.ErrorResponse
 // @Failure 500 {object} models.ErrorResponse
+// @Security BearerAuth
 // @Router /users [post]
 func (h *UserHandler) CreateUser(c *gin.Context) {
 	var user models.UserInput
@@ -62,6 +63,7 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 // @Failure 400 {object} models.ErrorResponse
 // @Failure 404 {object} models.ErrorResponse
 // @Failure 500 {object} models.ErrorResponse
+// @Security BearerAuth
 // @Router /users/{id} [get]
 func (h *UserHandler) GetUserByID(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
@@ -98,6 +100,7 @@ func (h *UserHandler) GetUserByID(c *gin.Context) {
 // @Success 200 {object} models.UserList
 // @Failure 400 {object} models.ErrorResponse
 // @Failure 500 {object} models.ErrorResponse
+// @Security BearerAuth
 // @Router /users [get]
 func (h *UserHandler) ListUsers(c *gin.Context) {
 	params := users_sql.SearchParams{
@@ -141,6 +144,7 @@ func (h *UserHandler) ListUsers(c *gin.Context) {
 // @Failure 400 {object} models.ErrorResponse
 // @Failure 404 {object} models.ErrorResponse
 // @Failure 500 {object} models.ErrorResponse
+// @Security BearerAuth
 // @Router /users/{id} [put]
 func (h *UserHandler) UpdateUser(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
@@ -177,6 +181,7 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 // @Failure 400 {object} models.ErrorResponse
 // @Failure 404 {object} models.ErrorResponse
 // @Failure 500 {object} models.ErrorResponse
+// @Security BearerAuth
 // @Router /users/{id} [delete]
 func (h *UserHandler) DeleteUser(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
