@@ -2,10 +2,8 @@ package routes
 
 import (
 	"database/sql"
-	"goapi/handlers"
 	"goapi/middleware"
-	"goapi/repository"
-	"goapi/services"
+	"goapi/routes/user_routes"
 
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
@@ -41,23 +39,8 @@ func SetupRouter(db *sql.DB) *gin.Engine {
 	// Use our custom authorization middleware
 	router.Use(gin.HandlerFunc(middleware.AuthMiddleware()))
 
-	// Initialize repositories
-	userRepo := repository.NewPostgresUserRepository(db)
-
-	// Initialize services
-	userService := services.NewUserService(userRepo)
-
-	// Initialize handlers
-	userHandler := handlers.NewUserHandler(userService)
-
-	router.GET("/", HelloWorldHandler)
-
-	// User routes
-	router.POST("/users", userHandler.CreateUser)
-	router.GET("/users", userHandler.ListUsers)
-	router.GET("/users/:id", userHandler.GetUserByID)
-	router.PUT("/users/:id", userHandler.UpdateUser)
-	router.DELETE("/users/:id", userHandler.DeleteUser)
+	// Setup user routes
+	user_routes.SetupUserRoutes(router, db)
 
 	return router
 }

@@ -22,7 +22,8 @@ WITH filtered_users AS (
         updated_at
     FROM users
     WHERE
-        CASE 
+        deleted_at IS NULL
+        AND CASE 
             WHEN $3 != '' THEN name ILIKE '%' || $3 || '%'
             WHEN $4 != '' THEN email ILIKE '%' || $4 || '%'
             ELSE true
@@ -54,8 +55,9 @@ const CountSQL = `
 SELECT COUNT(*)
 FROM users
 WHERE
-    CASE 
+    deleted_at IS NULL
+    AND CASE 
         WHEN $1 != '' THEN name ILIKE '%' || $1 || '%'
         WHEN $2 != '' THEN email ILIKE '%' || $2 || '%'
         ELSE true
-    END` 
+    END`

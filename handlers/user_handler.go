@@ -139,7 +139,7 @@ func (h *UserHandler) ListUsers(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path int true "User ID"
-// @Param user body models.UserOutput true "User object"
+// @Param user body models.UserInput true "User object"
 // @Success 200 {object} models.UserOutput
 // @Failure 400 {object} models.ErrorResponse
 // @Failure 404 {object} models.ErrorResponse
