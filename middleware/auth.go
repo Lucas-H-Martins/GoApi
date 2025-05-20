@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"net/http"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -21,22 +20,8 @@ func AuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		// Check if the header has the Basic prefix
-		parts := strings.Split(authHeader, " ")
-		if len(parts) != 2 || parts[0] != "Basic" {
-			c.JSON(http.StatusUnauthorized, gin.H{
-				"code":    http.StatusUnauthorized,
-				"message": "invalid authorization header format",
-			})
-			c.Abort()
-			return
-		}
-
-		// Get the credentials
-		credentials := parts[1]
-
 		// For testing purposes, check if credentials match
-		if credentials != "bHVjYXNAbHVjYXMuY29tLmJyOjEyMzQ=" { // Base64 of "lucas@lucas.com.br:1234"
+		if authHeader != "bHVjYXNAbHVjYXMuY29tLmJyOjEyMzQ=" { // Base64 of "lucas@lucas.com.br:1234"
 			c.JSON(http.StatusUnauthorized, gin.H{
 				"code":    http.StatusUnauthorized,
 				"message": "invalid credentials",
