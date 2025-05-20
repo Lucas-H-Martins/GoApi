@@ -2,10 +2,13 @@ package services
 
 import (
 	"context"
+	"errors"
 
 	"goapi/models"
 	"goapi/repository"
 	"goapi/repository/users_sql"
+
+	"github.com/lib/pq"
 )
 
 // UserService defines the interface for user-related business operations
@@ -34,6 +37,12 @@ func (s *userService) CreateUser(ctx context.Context, user *models.UserInput) (*
 	// Create user in repository
 	createdUser, err := s.repo.Create(user)
 	if err != nil {
+		var pqErr *pq.Error
+		if errors.As(err, &pqErr) {
+			if pqErr.Code == "23505" { // Unique violation
+				return nil, models.ErrDuplicate
+			}
+		}
 		return nil, err
 	}
 
