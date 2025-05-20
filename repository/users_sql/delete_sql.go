@@ -1,9 +1,10 @@
 package users_sql
 
 const DeleteSQL = `
--- name: DeleteUser
+-- name: SoftDeleteUser
 -- Params:
 --   $1: id (int64)
 -- Returns: Number of rows affected
-DELETE FROM users
-WHERE id = $1` 
+UPDATE users
+SET deleted_at = NOW()
+WHERE id = $1`
